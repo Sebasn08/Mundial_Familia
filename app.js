@@ -1,32 +1,81 @@
-// ===================== STORAGE HELPERS =====================
+// ===================== FIREBASE / FIRESTORE SETUP =====================
+// Reemplazá estos valores por los de tu proyecto Firebase (Configuración del proyecto > Tus apps > SDK config)
+const firebaseConfig = {
+  apiKey: "AIzaSyD0GX4xe9lCRkHQ5v9ThHZARwuVZSL1vRg",
+  authDomain: "pollamundialfamilia.firebaseapp.com",
+  projectId: "pollamundialfamilia",
+  storageBucket: "pollamundialfamilia.firebasestorage.app",
+  messagingSenderId: "26467752612",
+  appId: "1:26467752612:web:5da1c8af0b884f0dee6431"
+};
+
+let _fbApp, _fbDb;
+let _fbReady = (async () => {
+  const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+  const fsMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  _fbApp = appMod.initializeApp(firebaseConfig);
+  _fbDb = fsMod.getFirestore(_fbApp);
+  window._fsMod = fsMod; // expose Firestore functions for helpers below
+})();
+
+const POLLA_COLLECTION = "polla";
+
+function sanitizeKey(key){
+  // Firestore doc IDs can't contain "/" - everything else is fine
+  return key.replace(/\//g, "_");
+}
+
+// ===================== STORAGE HELPERS (Firestore-backed) =====================
+// Nota: en esta versión todo es "shared" (compartido) ya que usamos Firestore como backend único.
 async function storageGet(key, shared){
   try{
-    const res = await window.storage.get(key, shared);
-    return res ? JSON.parse(res.value) : null;
+    await _fbReady;
+    const fs = window._fsMod;
+    const ref = fs.doc(_fbDb, POLLA_COLLECTION, sanitizeKey(key));
+    const snap = await fs.getDoc(ref);
+    if(!snap.exists()) return null;
+    const data = snap.data();
+    return data && data.value !== undefined ? JSON.parse(data.value) : null;
   }catch(e){
-    return null;
-  }
+  console.error("storageSet error", e);
+  alert(JSON.stringify(e, null, 2));
+  return false;
+}
 }
 async function storageSet(key, value, shared){
   try{
-    await window.storage.set(key, JSON.stringify(value), shared);
+    await _fbReady;
+    const fs = window._fsMod;
+    const ref = fs.doc(_fbDb, POLLA_COLLECTION, sanitizeKey(key));
+    await fs.setDoc(ref, {value: JSON.stringify(value)});
     return true;
   }catch(e){
-    console.error("storage error", e);
+    console.error("storageSet error", e);
     return false;
   }
 }
 async function storageList(prefix, shared){
   try{
-    const res = await window.storage.list(prefix, shared);
-    return res ? res.keys : [];
+    await _fbReady;
+    const fs = window._fsMod;
+    const colRef = fs.collection(_fbDb, POLLA_COLLECTION);
+    const snap = await fs.getDocs(colRef);
+    const keys = [];
+    snap.forEach(docSnap=>{
+      if(docSnap.id.startsWith(prefix)) keys.push(docSnap.id);
+    });
+    return keys;
   }catch(e){
+    console.error("storageList error", e);
     return [];
   }
 }
 async function storageDelete(key, shared){
   try{
-    await window.storage.delete(key, shared);
+    await _fbReady;
+    const fs = window._fsMod;
+    const ref = fs.doc(_fbDb, POLLA_COLLECTION, sanitizeKey(key));
+    await fs.deleteDoc(ref);
     return true;
   }catch(e){
     return false;
@@ -336,8 +385,8 @@ async function loadPredictions(name){
 }
 
 async function savePredictions(){
-  if(!STATE.currentParticipant) return;
-  await storageSet("prediction:"+STATE.currentParticipant, STATE.predictions, true);
+  if(!STATE.currentParticipant) return false;
+  return await storageSet("prediction:"+STATE.currentParticipant, STATE.predictions, true);
 }
 
 function renderPredictionsForm(){
