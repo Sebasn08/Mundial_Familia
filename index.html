@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polla Mundialista 2026</title>
+<style>
+  :root{
+    --pitch:#1f3d2b;
+    --pitch-light:#2b5440;
+    --line:#e8e2cf;
+    --chalk:#f7f4ec;
+    --gold:#d9a544;
+    --gold-dark:#a87a2c;
+    --ink:#1c2620;
+    --muted:#6f7d72;
+    --card:#ffffff;
+    --danger:#b3432f;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--chalk);
+    color:var(--ink);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(31,61,43,0.035) 0px, rgba(31,61,43,0.035) 1px, transparent 1px, transparent 64px);
+  }
+  header{
+    background:var(--pitch);
+    color:var(--chalk);
+    padding:28px 20px 22px;
+    position:relative;
+    overflow:hidden;
+    border-bottom:4px solid var(--gold);
+  }
+  header::before{
+    content:"";
+    position:absolute;
+    top:-60px; right:-60px;
+    width:220px; height:220px;
+    border:2px solid rgba(247,244,236,0.08);
+    border-radius:50%;
+  }
+  header::after{
+    content:"";
+    position:absolute;
+    top:50%; left:-40px;
+    width:160px; height:160px;
+    border:2px solid rgba(247,244,236,0.06);
+    border-radius:50%;
+    transform:translateY(-50%);
+  }
+  .header-inner{max-width:1000px;margin:0 auto;position:relative;z-index:1;}
+  .eyebrow{
+    font-family:'Oswald',sans-serif;
+    font-size:12px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 6px;
+    font-weight:500;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-size:clamp(28px,6vw,44px);
+    margin:0;
+    font-weight:600;
+    letter-spacing:0.01em;
+    text-transform:uppercase;
+  }
+  .subtitle{
+    margin:8px 0 0;
+    font-size:14px;
+    color:rgba(247,244,236,0.7);
+  }
+  nav{
+    max-width:1000px;
+    margin:0 auto;
+    display:flex;
+    gap:6px;
+    padding:14px 20px 0;
+    flex-wrap:wrap;
+    position:relative;
+    z-index:1;
+  }
+  nav button{
+    font-family:'Oswald',sans-serif;
+    background:rgba(247,244,236,0.08);
+    border:1px solid rgba(247,244,236,0.18);
+    color:var(--chalk);
+    padding:9px 16px;
+    border-radius:999px;
+    font-size:13px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:background 0.15s, color 0.15s;
+    font-weight:500;
+  }
+  nav button:hover{background:rgba(247,244,236,0.16);}
+  nav button.active{
+    background:var(--gold);
+    color:var(--pitch);
+    border-color:var(--gold);
+  }
+  main{
+    max-width:1000px;
+    margin:0 auto;
+    padding:24px 20px 80px;
+  }
+  .view{display:none;}
+  .view.active{display:block;}
+  h2{
+    font-family:'Oswald',sans-serif;
+    font-size:24px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    font-weight:600;
+    margin:0 0 4px;
+    color:var(--pitch);
+  }
+  h3{
+    font-family:'Oswald',sans-serif;
+    font-size:16px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    font-weight:600;
+    margin:0 0 2px;
+    color:var(--pitch);
+  }
+  .section-intro{
+    color:var(--muted);
+    font-size:14px;
+    margin:0 0 20px;
+    max-width:620px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    margin-bottom:14px;
+  }
+  .group-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:14px;
+    margin-bottom:24px;
+  }
+  .group-card .group-name{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line);
+  }
+  .group-name span.letter{
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold-dark);
+    font-weight:600;
+  }
+  .standings-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .standings-table th{
+    text-align:left;
+    font-weight:500;
+    color:var(--muted);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    padding:4px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .standings-table td{padding:6px 4px;border-bottom:1px solid rgba(232,226,207,0.6);}
+  .standings-table td.num{text-align:center;width:28px;}
+  .standings-table tr.qualify td{font-weight:500;}
+  .standings-table tr.qualify td:first-child{border-left:3px solid var(--gold);padding-left:6px;}
+  .match-row{
+    display:grid;
+    grid-template-columns:90px 1fr 70px 1fr 90px;
+    align-items:center;
+    gap:8px;
+    padding:10px 0;
+    border-bottom:1px solid rgba(232,226,207,0.6);
+    font-size:14px;
+  }
+  .match-row:last-child{border-bottom:none;}
+  .match-meta{
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .team{font-weight:500;}
+  .team.home{text-align:right;}
+  .score-input{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+  }
+  .score-input input{
+    width:38px;
+    text-align:center;
+    padding:6px 2px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:14px;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+  }
+  .score-input input:focus{outline:2px solid var(--gold);border-color:var(--gold);}
+  .score-input .dash{color:var(--muted);font-size:12px;}
+  .pred-input input{
+    width:32px;
+    text-align:center;
+    padding:5px 2px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:13px;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    background:#fbfaf6;
+  }
+  .pred-input input:focus{outline:2px solid var(--gold);border-color:var(--gold);}
+  .points-badge{
+    font-size:11px;
+    font-weight:600;
+    padding:2px 8px;
+    border-radius:999px;
+    background:var(--pitch-light);
+    color:var(--chalk);
+    white-space:nowrap;
+  }
+  .points-badge.zero{background:var(--line);color:var(--muted);}
+  .day-divider{
+    font-family:'Oswald',sans-serif;
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--gold-dark);
+    margin:18px 0 4px;
+    padding-bottom:4px;
+    border-bottom:2px solid var(--gold);
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  .day-divider:first-child{margin-top:0;}
+  .day-divider .bonus-tag{
+    font-size:10px;
+    color:var(--muted);
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .btn{
+    font-family:'Oswald',sans-serif;
+    background:var(--pitch);
+    color:var(--chalk);
+    border:none;
+    padding:11px 22px;
+    border-radius:6px;
+    font-size:13px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .btn:hover{background:var(--pitch-light);}
+  .btn.secondary{
+    background:transparent;
+    color:var(--pitch);
+    border:1px solid var(--pitch);
+  }
+  .btn.secondary:hover{background:rgba(31,61,43,0.06);}
+  .btn.danger{background:var(--danger);}
+  .text-input, select.text-input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  .text-input:focus{outline:2px solid var(--gold);border-color:var(--gold);}
+  label.field-label{
+    display:block;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--muted);
+    margin-bottom:6px;
+    font-weight:500;
+  }
+  .field{margin-bottom:16px;}
+  .leader-row{
+    display:grid;
+    grid-template-columns:36px 1fr 90px;
+    align-items:center;
+    gap:10px;
+    padding:12px 0;
+    border-bottom:1px solid rgba(232,226,207,0.6);
+  }
+  .leader-row:last-child{border-bottom:none;}
+  .leader-row .rank{
+    font-family:'Oswald',sans-serif;
+    font-size:20px;
+    font-weight:600;
+    color:var(--gold-dark);
+    text-align:center;
+  }
+  .leader-row .name{font-weight:500;font-size:15px;}
+  .leader-row .pts{
+    font-family:'Oswald',sans-serif;
+    font-size:20px;
+    font-weight:600;
+    text-align:right;
+    color:var(--pitch);
+  }
+  .leader-row .pts small{font-size:11px;color:var(--muted);font-weight:400;text-transform:uppercase;}
+  .leader-row.rank-1 .rank{color:var(--gold);}
+  .pill-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+  .pill-tabs button{
+    font-family:'Oswald',sans-serif;
+    background:var(--card);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:7px 14px;
+    border-radius:999px;
+    font-size:12px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    cursor:pointer;
+    font-weight:500;
+  }
+  .pill-tabs button.active{background:var(--pitch);color:var(--chalk);border-color:var(--pitch);}
+  .empty-state{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--muted);
+  }
+  .empty-state h3{color:var(--muted);}
+  .toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--pitch);
+    color:var(--chalk);
+    padding:12px 24px;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:500;
+    opacity:0;
+    transition:opacity 0.25s, transform 0.25s;
+    pointer-events:none;
+    z-index:100;
+    box-shadow:0 4px 16px rgba(0,0,0,0.2);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-8px);}
+  .points-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px;
+  }
+  .points-grid .field{margin-bottom:0;}
+  .save-bar{
+    position:sticky;
+    bottom:0;
+    background:linear-gradient(to top, var(--chalk) 70%, transparent);
+    padding:16px 0 8px;
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+  }
+  .bracket-match{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    background:var(--card);
+  }
+  .bracket-match .vs-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:8px;
+  }
+  .bracket-match select{
+    flex:1;
+    padding:7px 8px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:13px;
+  }
+  .round-label{
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--gold-dark);
+    margin:22px 0 10px;
+    font-weight:600;
+  }
+  .round-label:first-child{margin-top:0;}
+  .winner-banner{
+    background:var(--pitch);
+    color:var(--chalk);
+    border-radius:var(--radius);
+    padding:28px;
+    text-align:center;
+    margin-bottom:20px;
+  }
+  .winner-banner .trophy{font-size:36px;display:block;margin-bottom:8px;}
+  .winner-banner h2{color:var(--gold);margin-bottom:6px;}
+  @media (max-width:520px){
+    .match-row{grid-template-columns:60px 1fr 60px 1fr 60px;font-size:12px;gap:4px;}
+    .leader-row{grid-template-columns:30px 1fr 70px;}
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <p class="eyebrow">FIFA World Cup 26 &mdash; USA · Canadá · México</p>
+    <h1>Polla Mundialista</h1>
+    <p class="subtitle">Predicciones, marcadores y la tabla de quién la está clavando.</p>
+  </div>
+  <nav id="mainNav">
+    <button data-view="grupos" class="active">Fase de grupos</button>
+    <button data-view="tabla-real">Tabla real</button>
+    <button data-view="tabla-predictor">Mi tabla</button>
+    <button data-view="eliminatorias">Eliminatorias</button>
+    <button data-view="tabla">Tabla de la polla</button>
+    <button data-view="predicciones">Mis predicciones</button>
+    <button data-view="admin">Admin</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ================= VISTA: FASE DE GRUPOS ================= -->
+  <section class="view active" id="view-grupos">
+    <h2>Fase de grupos</h2>
+    <p class="section-intro">Resultados oficiales de los 72 partidos de la primera fase. Los marcadores se cargan desde el panel admin a medida que se juegan.</p>
+    <div class="pill-tabs" id="groupTabs"></div>
+    <div id="groupContent"></div>
+  </section>
+
+  <!-- ================= VISTA: TABLA REAL ================= -->
+  <section class="view" id="view-tabla-real">
+    <h2>Tabla real de grupos</h2>
+    <p class="section-intro">Posiciones actuales en cada grupo según los resultados oficiales cargados por el admin.</p>
+    <div class="pill-tabs" id="realGroupTabs"></div>
+    <div id="realGroupContent"></div>
+  </section>
+
+  <!-- ================= VISTA: TABLA POR PREDICTOR ================= -->
+  <section class="view" id="view-tabla-predictor">
+    <h2>Mi tabla de grupos</h2>
+    <p class="section-intro">Cómo quedarían las posiciones de cada grupo según tus predicciones de marcadores.</p>
+    <div class="card" id="predictorSelectorCard"></div>
+    <div class="pill-tabs" id="predGroupTabs" style="margin-top:18px;"></div>
+    <div id="predGroupContent"></div>
+  </section>
+
+  <!-- ================= VISTA: ELIMINATORIAS ================= -->
+  <section class="view" id="view-eliminatorias">
+    <h2>Fase eliminatoria</h2>
+    <p class="section-intro">Desde dieciseisavos hasta la final. El cuadro se completa cuando el admin define los 32 clasificados y los cruces reales.</p>
+    <div id="knockoutContent"></div>
+  </section>
+
+  <!-- ================= VISTA: TABLA DE LA POLLA ================= -->
+  <section class="view" id="view-tabla">
+    <h2>Tabla de la polla</h2>
+    <p class="section-intro">Puntaje acumulado de cada participante según los resultados confirmados.</p>
+    <div id="leaderboardContent"></div>
+  </section>
+
+  <!-- ================= VISTA: PREDICCIONES ================= -->
+  <section class="view" id="view-predicciones">
+    <h2>Mis predicciones</h2>
+    <p class="section-intro">Elegí o creá tu nombre, completá tus marcadores y guardá. Podés volver y editar mientras los partidos no se hayan jugado.</p>
+    <div class="card" id="participantSelector"></div>
+    <div id="predictionsContent"></div>
+  </section>
+
+  <!-- ================= VISTA: ADMIN ================= -->
+  <section class="view" id="view-admin">
+    <h2>Panel admin</h2>
+    <p class="section-intro">Cargá los resultados reales de los partidos, definí el cuadro de eliminatorias y ajustá el sistema de puntos.</p>
+
+    <div class="pill-tabs" id="adminTabs">
+      <button data-admin="resultados" class="active">Resultados de grupos</button>
+      <button data-admin="bracket">Cuadro eliminatorio</button>
+      <button data-admin="puntos">Sistema de puntos</button>
+    </div>
+    <div id="adminContent"></div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
