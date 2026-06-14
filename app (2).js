@@ -37,9 +37,10 @@ async function storageGet(key, shared){
     const data = snap.data();
     return data && data.value !== undefined ? JSON.parse(data.value) : null;
   }catch(e){
-    console.error("storageGet error", e);
-    return null;
-  }
+  console.error("storageSet error", e);
+  alert(JSON.stringify(e, null, 2));
+  return false;
+}
 }
 async function storageSet(key, value, shared){
   try{
