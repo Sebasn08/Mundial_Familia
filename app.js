@@ -1062,8 +1062,8 @@ function buildBracketTreeHtml(bracket, opts){
       const userTeam  = userStandings[2]  && userStandings[2].team;
       if(!adminTeam || !userTeam) return '';
       if(adminTeam === userTeam)
-        return '<span style="font-size:11px;color:#2b7a47;margin-left:3px;" title="¡Acertaste el tercero de esta llave (' + adminTeam + ')!">✅</span>';
-      return '<span style="font-size:11px;color:#c0392b;margin-left:3px;" title="El tercero oficial es ' + adminTeam + ', no ' + userTeam + '">❌</span>';
+        return '✅<span style="font-size:11px;color:#2b7a47;margin-left:3px;" title="¡Acertaste el tercero de esta llave (' + adminTeam + ')!"></span>';
+      return '❌<span style="font-size:11px;color:#c0392b;margin-left:3px;" title="El tercero oficial es ' + adminTeam + ', no ' + userTeam + '"></span>';
     }
 
     if(slot.length === 2 && (slot[0] === '1' || slot[0] === '2')){
@@ -1078,8 +1078,8 @@ function buildBracketTreeHtml(bracket, opts){
       const userTeam = opts.r32slots ? opts.r32slots[slot] : null;
       if(!userTeam || !realTeam) return '';
       if(userTeam === realTeam)
-        return '<span style="font-size:11px;color:#2b7a47;margin-left:3px;" title="¡Acertaste!">✅</span>';
-      return '<span style="font-size:11px;color:#c0392b;margin-left:3px;" title="No acertaste">❌</span>';
+        return '✅<span style="font-size:11px;color:#2b7a47;margin-left:3px;" title="¡Acertaste!">✅</span>';
+      return '❌<span style="font-size:11px;color:#c0392b;margin-left:3px;" title="No acertaste">❌</span>';
     }
 
     return '';
