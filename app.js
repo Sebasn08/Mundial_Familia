@@ -1078,8 +1078,8 @@ function buildBracketTreeHtml(bracket, opts){
       const userTeam = opts.r32slots ? opts.r32slots[slot] : null;
       if(!userTeam || !realTeam) return '';
       if(userTeam === realTeam)
-        return '✅<span style="font-size:11px;color:#2b7a47;margin-left:3px;" title="¡Acertaste!">✅</span>';
-      return '❌<span style="font-size:11px;color:#c0392b;margin-left:3px;" title="No acertaste">❌</span>';
+        return '✅<span style="font-size:11px;color:#2b7a47;margin-left:3px;" title="¡Acertaste!"></span>';
+      return '❌<span style="font-size:11px;color:#c0392b;margin-left:3px;" title="No acertaste"></span>';
     }
 
     return '';
@@ -1307,9 +1307,9 @@ function renderPredKnockoutForm(){
         const userTeam  = computeGroupStandings(currentPick)[2] && computeGroupStandings(currentPick)[2].team;
         if(adminTeam && userTeam){
           if(adminTeam === userTeam){
-            badge = '<span style="font-size:14px;margin-left:4px;" title="¡Acertaste! ('+adminTeam+')">✅</span>';
+            badge = '✅<span style="font-size:14px;margin-left:4px;" title="¡Acertaste! ('+adminTeam+')"></span>';
           } else {
-            badge = '<span style="font-size:14px;margin-left:4px;" title="El tercero oficial es '+escapeHtml(adminTeam)+', no '+escapeHtml(userTeam)+'">❌</span>';
+            badge = '❌<span style="font-size:14px;margin-left:4px;" title="El tercero oficial es '+escapeHtml(adminTeam)+', no '+escapeHtml(userTeam)+'"></span>';
           }
         }
       }
