@@ -1096,6 +1096,16 @@ function computeUserBracket(pred){
 }
 
 // ===================== RENDER: BRACKET (árbol horizontal) =====================
+// Renderiza el badge "+N pts" del bracket. `res` puede ser un número simple, o un
+// objeto {pts, label} cuando hay algo que aclarar (ej. llave equivocada).
+function bracketPtsBadgeHtml(res){
+  const pts = (res && typeof res === 'object') ? res.pts : res;
+  const label = (res && typeof res === 'object' && res.label) ? res.label : '';
+  const titleAttr = label ? ' title="'+escapeHtml(label)+'"' : '';
+  const zeroClass = pts === 0 ? ' zero' : '';
+  return '<div class="bracket-pts'+zeroClass+'"'+titleAttr+'>+'+pts+' pts</div>';
+}
+
 // Construye el HTML del cuadro de eliminatorias en columnas (16avos -> final),
 // con líneas de conexión vía CSS. `opts.editable=true` agrega inputs de marcador
 // para que el participante prediga cada cruce; `opts.pointsFn` opcional calcula
@@ -1217,8 +1227,8 @@ function buildBracketTreeHtml(bracket, opts){
       html += cellHtml(m.away, round.key, idx, 'away', m);
       html += '</div>';
       if(opts.pointsFn && m.home && m.away && m.result){
-        const pts = opts.pointsFn(round, m, idx);
-        if(pts !== null) html += '<div class="bracket-pts">+'+pts+' pts</div>';
+        const res = opts.pointsFn(round, m, idx);
+        if(res !== null) html += bracketPtsBadgeHtml(res);
       }
     });
     html += '</div></div>';
@@ -1234,8 +1244,8 @@ function buildBracketTreeHtml(bracket, opts){
     html += '</div>';
     if(opts.pointsFn && m.home && m.away && m.result){
       const round = KNOCKOUT_ROUNDS.find(r=>r.key==="final");
-      const pts = opts.pointsFn(round, m, idx);
-      if(pts !== null) html += '<div class="bracket-pts">+'+pts+' pts</div>';
+      const res = opts.pointsFn(round, m, idx);
+      if(res !== null) html += bracketPtsBadgeHtml(res);
     }
   });
   html += '</div></div>';
@@ -1262,15 +1272,32 @@ function buildBracketTreeHtml(bracket, opts){
     html += '</div></div>';
     if(opts.pointsFn && third.home && third.away && third.result){
       const round = KNOCKOUT_ROUNDS.find(r=>r.key==="third");
-      const pts = opts.pointsFn(round, third, 0);
-      if(pts !== null) html += '<div class="bracket-pts">+'+pts+' pts</div>';
+      const res = opts.pointsFn(round, third, 0);
+      if(res !== null) html += bracketPtsBadgeHtml(res);
     }
   }
 
   return html;
 }
 
-// ---- "Mi llave a la final": bracket proyectado e interactivo del participante ----
+// "Mi llave a la final": bracket proyectado e interactivo del participante ----
+// Calcula qué le tocaría a un cruce puntual del bracket del participante, para
+// mostrárselo como badge "+N pts" debajo del cruce. Devuelve null si el partido
+// real todavía no se jugó (no hay nada que mostrar todavía). Si la llave que
+// armó el participante no coincide con la llave real, devuelve 0 pts con una
+// aclaración (no se le da el beneficio de la duda aunque su marcador "calce").
+function knockoutPointsFn(round, userM, idx, pred){
+  const realM = (STATE.knockout && STATE.knockout[round.key] && STATE.knockout[round.key][idx]) || null;
+  if(!realM || !realM.result || !realM.home || !realM.away) return null;
+
+  if(!isSameMatchup(userM, realM)){
+    return {pts: 0, label: 'Llave equivocada: el cruce real fue ' + realM.home + ' vs ' + realM.away};
+  }
+  const rawPred = (pred.knockout[round.key] && pred.knockout[round.key][idx]) || {};
+  const normPred = normalizeKnockoutPred(userM, realM, rawPred);
+  return scoreKnockoutMatch(round, realM, normPred).total;
+}
+
 function renderPredKnockoutForm(){
   const container = document.getElementById("predKnockoutContent");
   if(!container) return;
@@ -1406,7 +1433,7 @@ function renderPredKnockoutForm(){
   resolveUserR32(pred).forEach(s=>{ r32slotsMap[s.homeSlot] = s.home; r32slotsMap[s.awaySlot] = s.away; });
   html += '<div class="card">';
   html += '<h3 style="margin:0 0 8px;">Tu llave</h3>';
-  html += '<div id="predBracketTree">'+buildBracketTreeHtml(bracket, {editable:true, thirdPicks: pred.thirdPicks||{}, r32slots: r32slotsMap, adminKnockout: STATE.knockout})+'</div>';
+  html += '<div id="predBracketTree">'+buildBracketTreeHtml(bracket, {editable:true, thirdPicks: pred.thirdPicks||{}, r32slots: r32slotsMap, adminKnockout: STATE.knockout, pointsFn: (round, m, idx) => knockoutPointsFn(round, m, idx, pred)})+'</div>';
   html += '<p class="bracket-legend">Completá el marcador de cada cruce para que el ganador avance automáticamente a la siguiente ronda.</p>';
   html += '</div>';
   html += '<div class="save-bar"><button class="btn" id="saveKnockoutBracketBtn">Guardar mi llave</button></div>';
@@ -1444,7 +1471,7 @@ function wireBracketInputs(container, pred){
     const bracket = computeUserBracket(pred);
     const r32slotsMapW = {};
     resolveUserR32(pred).forEach(s=>{ r32slotsMapW[s.homeSlot] = s.home; r32slotsMapW[s.awaySlot] = s.away; });
-    treeEl.innerHTML = buildBracketTreeHtml(bracket, {editable:true, thirdPicks: pred.thirdPicks||{}, r32slots: r32slotsMapW, adminKnockout: STATE.knockout});
+    treeEl.innerHTML = buildBracketTreeHtml(bracket, {editable:true, thirdPicks: pred.thirdPicks||{}, r32slots: r32slotsMapW, adminKnockout: STATE.knockout, pointsFn: (round, m, idx) => knockoutPointsFn(round, m, idx, pred)});
     wireBracketInputs(container, pred);
   }
 
@@ -1751,6 +1778,70 @@ function scoreKnockoutMatch(round, match, pred){
   return {total: clasificadoPts + marcadorPts, clasificadoPts, marcadorPts};
 }
 
+// Compara dos cruces por EQUIPO, sin importar quién es local/visitante.
+// Se usa para saber si el participante predijo la LLAVE correcta (los mismos
+// dos equipos reales en esa posición del cuadro).
+function isSameMatchup(userM, realM){
+  if(!userM || !realM || !userM.home || !userM.away || !realM.home || !realM.away) return false;
+  return (userM.home === realM.home && userM.away === realM.away)
+      || (userM.home === realM.away && userM.away === realM.home);
+}
+
+// Traduce el marcador predicho por el participante (que está guardado en términos
+// de SU bracket: userM.home/userM.away) a los términos del partido REAL
+// (realM.home/realM.away), para poder comparar parejo aunque el lado local/
+// visitante no coincida entre el bracket proyectado y el cuadro oficial.
+function normalizeKnockoutPred(userM, realM, rawPred){
+  rawPred = rawPred || {};
+  const scoreFor = {};
+  if(userM.home && rawPred.home !== undefined && rawPred.home !== '') scoreFor[userM.home] = rawPred.home;
+  if(userM.away && rawPred.away !== undefined && rawPred.away !== '') scoreFor[userM.away] = rawPred.away;
+  return {
+    home: scoreFor[realM.home] !== undefined ? scoreFor[realM.home] : '',
+    away: scoreFor[realM.away] !== undefined ? scoreFor[realM.away] : '',
+    penaltyWinner: rawPred.penaltyWinner || null
+  };
+}
+
+// Calcula los puntos de eliminatorias (16avos en adelante) de un participante.
+// REGLA CLAVE: un cruce solo suma puntos (clasificado y/o marcador) si el
+// participante predijo la LLAVE correcta, es decir, si en esa posición del
+// cuadro tenía exactamente los mismos dos equipos que el cruce real. Si predijo
+// "Brasil vs Marruecos" y la llave real fue "Brasil vs Japón", ese cruce da 0
+// puntos sin importar qué marcador haya puesto, porque no acertó la llave.
+// Si la llave SÍ es correcta, ahí sí suman por separado los puntos de
+// "clasificado" (acertar quién avanza) y de "marcador exacto", como ya estaban
+// definidos en el sistema de puntos.
+function calculateKnockoutScore(pred){
+  const userBracket = computeUserBracket(pred);
+  const byRound = {};
+  let total = 0;
+
+  KNOCKOUT_ROUNDS.forEach(round=>{
+    const realMatches = (STATE.knockout && STATE.knockout[round.key]) || [];
+    const userMatches = userBracket[round.key] || [];
+    let roundPts = 0;
+
+    realMatches.forEach((realM, idx)=>{
+      // El cruce real todavía no tiene resultado cargado: nada que puntuar.
+      if(!realM.result || !realM.home || !realM.away) return;
+
+      const userM = userMatches[idx];
+      if(!isSameMatchup(userM, realM)) return; // llave equivocada: 0 puntos en este cruce
+
+      const rawPred = (pred.knockout[round.key] && pred.knockout[round.key][idx]) || {};
+      const normPred = normalizeKnockoutPred(userM, realM, rawPred);
+      const pts = scoreKnockoutMatch(round, realM, normPred);
+      roundPts += pts.total;
+    });
+
+    byRound[round.key] = roundPts;
+    total += roundPts;
+  });
+
+  return {total, byRound};
+}
+
 // ===================== RENDER: TABLA DE LA POLLA =====================
 async function renderLeaderboard(){
   const container = document.getElementById("leaderboardContent");
@@ -1778,12 +1869,16 @@ async function renderLeaderboard(){
   // Etiquetas de rondas para la cabecera
   const ROUND_LABELS = {r32:'16avos', r16:'8vos', qf:'Cuartos', sf:'Semis', third:'3er P.', final:'Final'};
 
-  const ROUND_LABELS2 = {r32:'16avos', r16:'8vos', qf:'Cuartos', sf:'Semis', third:'3er P.', final:'Final'};
-
   let html = '<div class="card">';
   results.forEach((r, idx)=>{
     const b = r.breakdown;
-    const parts = ['Partidos: '+b.partidos, 'Clasif.: '+b.clasificados, 'Terceros: '+b.terceros];
+    const parts = ['Grupos: '+b.partidos, 'Clasf 1 y 2: '+b.clasificados, 'Clasf 3ros: '+b.terceros];
+    // Una columna por cada ronda de eliminatorias que ya tenga al menos un
+    // resultado real cargado (para no mostrar "8vos: 0" antes de tiempo).
+    KNOCKOUT_ROUNDS.forEach(rd=>{
+      const roundStarted = ((STATE.knockout && STATE.knockout[rd.key]) || []).some(m => m.result);
+      if(roundStarted) parts.push(ROUND_LABELS[rd.key] + ': ' + (b.rounds[rd.key] || 0));
+    });
     html += '<div class="leader-row '+(idx===0?'rank-1':'')+'">';
     html += '<div class="rank">'+(idx+1)+'</div>';
     html += '<div class="name">'+escapeHtml(r.name)+'</div>';
@@ -1847,14 +1942,18 @@ function calculateTotalScore(pred){
     }
   });
 
-  const total = partidosPts + clasificadosPts + tercerosPts;
+  // 4. Puntos de eliminatorias (16avos en adelante) -- solo cuenta si la llave es correcta
+  const knockoutScore = calculateKnockoutScore(pred);
+
+  const total = partidosPts + clasificadosPts + tercerosPts + knockoutScore.total;
   return {
     total,
     breakdown: {
       partidos: partidosPts,
       clasificados: clasificadosPts,
       terceros: tercerosPts,
-      rounds: {}
+      eliminatorias: knockoutScore.total,
+      rounds: knockoutScore.byRound
     }
   };
 }
